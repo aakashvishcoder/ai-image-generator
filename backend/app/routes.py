@@ -1,9 +1,20 @@
 from fastapi import APIRouter
-from .schemas import PromptRequest
-from .openaiclient import generate_image
+from pydantic import BaseModel
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from .replicate_client import generate_image
 
 router = APIRouter()
+executor = ThreadPoolExecutor(max_workers=3)
+
+class PromptRequest(BaseModel):
+    prompt: str
 
 @router.post("/generate")
-async def generate(prompt: PromptRequest):
-    return await generate_image(prompt.prompt)
+async def generate(prompt_request: PromptRequest):
+    result = await asyncio.get_running_loop().run_in_executor(
+        executor,
+        generate_image,
+        prompt_request.prompt,
+    )
+    return result
