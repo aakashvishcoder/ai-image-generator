@@ -16,10 +16,15 @@
 - React Native
 - HTML
 - CSS
+- Python
+- FastAPI
 
 ## How to Use
 
 ```bash
 git clone repo
-cd your-repo/src
-npm start 
+cd your-repo/backend/app
+python main.py
+cd your-repo/frontend/src
+npm start
+
