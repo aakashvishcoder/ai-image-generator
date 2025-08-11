@@ -6,17 +6,18 @@ function App() {
   const [image, setImage] = useState('');
 
   const generate = async () => {
+    console.log("Sending request to backend...");
     try {
       const res = await axios.post('http://localhost:8000/generate', { prompt });
+      console.log("Response from backend:", res.data);
       if(res.data.url) {
         setImage(res.data.url);
-      } else {
-        console.error("Error from backend:", res.data.error);
       }
     } catch (error) {
-      console.error("Error generating image:", error);
+      console.error("Error from backend:", error);
     }
   };
+
 
   return (
     <div className="p-8 max-w-xl mx-auto">
