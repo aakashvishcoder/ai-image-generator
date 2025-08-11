@@ -1,25 +1,23 @@
 import os
-import replicate
+import io
+import requests
 from dotenv import load_dotenv
+from huggingface_hub import InferenceClient
 
+# Load secrets from .env
 load_dotenv()
+HF_API_KEY = os.getenv("HF_API_KEY")  
+CLOUDINARY_UPLOAD_URL = os.getenv("CLOUDINARY_UPLOAD_URL")  # full upload URL from Cloudinary dashboard
 
-REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
-client = replicate.Client(api_token=REPLICATE_API_TOKEN)
+hf_client = InferenceClient(provider="fal-ai", api_key=HF_API_KEY)
 
-def generate_image(prompt: str):
-    model_id = "ultralytics/yolo11n" #change this a different replicate model
-    try:
-        output_urls = client.run(
-            model_id,
-            input={"prompt": prompt}
-        )
-        print("Replicate output:", output_urls)  
-        if output_urls:
-            return {"url": output_urls[0]}
-        else:
-            return {"error": "No image generated"}
-    except replicate.exceptions.ReplicateError as e:
-        print(f"Replicate API error: {e}")
-        return {"error": f"Replicate API error: {e}"}
+def generate_image_url(prompt: str):
+    image = hf_client.text_to_image(prompt, model="Qwen/Qwen-Image")
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    buffer.seek(0)
 
+    response = requests.post(CLOUDINARY_UPLOAD_URL, files={"file": buffer})
+    if response.status_code == 200:
+        return {"url": response.json()["secure_url"]}
+    return {"error": response.text}
